@@ -26,7 +26,7 @@ const cards = [
   {
     id: "1",
     cardNumber: "S 123 456 789 012 X",
-    holderName: "Karolína Veselá",
+    holderName: "Kristina Nazarjanová",
     school: "Škola",
     validFrom: "09/2025",
     validTo: "12/2026",
