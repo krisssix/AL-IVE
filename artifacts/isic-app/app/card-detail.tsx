@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
+  Easing,
+  Image,
   Platform,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,15 +13,18 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
+const SCREEN_HEIGHT = Dimensions.get("window").height;
 const CARD_W = Math.min(SCREEN_WIDTH - 40, 360);
+const CARD_H = CARD_W * 1.55;
+const BADGE_SIZE = 78;
 
 const cards = [
   {
     id: "1",
-    type: "ISIC",
     cardNumber: "S 123 456 789 012 X",
     holderName: "Karolína Veselá",
     school: "Škola",
@@ -31,35 +35,145 @@ const cards = [
   },
 ];
 
-function ISICCard({ card }: { card: typeof cards[0] }) {
-  const cardH = CARD_W * 1.55;
+const BADGE_POSITIONS = [
+  { topFrac: 0.03, rightFrac: 0.04,  tilt: -15, delay: 0   },
+  { topFrac: 0.03, rightFrac: 0.52,  tilt:  10, delay: 90  },
+  { topFrac: 0.10, rightFrac: 0.76,  tilt:  -5, delay: 180 },
+  { topFrac: 0.18, rightFrac: 0.16,  tilt:  20, delay: 270 },
+  { topFrac: 0.20, rightFrac: 0.56,  tilt: -25, delay: 140 },
+  { topFrac: 0.30, rightFrac: 0.83,  tilt:  12, delay: 240 },
+  { topFrac: 0.33, rightFrac: 0.02,  tilt: -10, delay: 340 },
+  { topFrac: 0.40, rightFrac: 0.46,  tilt:   8, delay: 60  },
+  { topFrac: 0.48, rightFrac: 0.73,  tilt: -18, delay: 390 },
+  { topFrac: 0.53, rightFrac: 0.12,  tilt:  15, delay: 175 },
+  { topFrac: 0.61, rightFrac: 0.59,  tilt:  -8, delay: 310 },
+  { topFrac: 0.68, rightFrac: 0.26,  tilt:  22, delay: 75  },
+  { topFrac: 0.76, rightFrac: 0.66,  tilt: -12, delay: 440 },
+];
+
+function ISICBadge({
+  topFrac,
+  rightFrac,
+  tilt,
+  delay,
+}: {
+  topFrac: number;
+  rightFrac: number;
+  tilt: number;
+  delay: number;
+}) {
+  const slideAnim = useRef(new Animated.Value(BADGE_SIZE * 3)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const spinAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const enterTimer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 700,
+          easing: Easing.out(Easing.back(1.1)),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, delay);
+
+    const spinLoop = Animated.loop(
+      Animated.timing(spinAnim, {
+        toValue: 1,
+        duration: 4000 + delay * 3,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    spinLoop.start();
+
+    return () => {
+      clearTimeout(enterTimer);
+      spinLoop.stop();
+    };
+  }, []);
+
+  const spin = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
+  const topPx = topFrac * SCREEN_HEIGHT;
+  const rightPx = rightFrac * SCREEN_WIDTH;
 
   return (
-    <View style={[styles.card, { width: CARD_W, height: cardH }]}>
-      <View style={styles.cardHeader}>
-        <View style={styles.isicLogoArea}>
-          <View style={styles.isicCircle}>
-            <Text style={styles.isicCircleText}>ISIC</Text>
-          </View>
-          <View style={{ marginLeft: 8 }}>
-            <Text style={styles.isicIntl}>INTERNATIONAL</Text>
-            <Text style={styles.isicStudent}>STUDENT</Text>
-            <Text style={styles.isicIdentity}>IDENTITY CARD</Text>
-          </View>
-        </View>
-        <View style={styles.unescoArea}>
-          <Feather name="globe" size={20} color="#0D5C84" />
-          <View style={{ marginLeft: 4 }}>
-            <Text style={styles.cardNumLabel}>ISIC card number</Text>
-            <Text style={styles.cardNum}>{card.cardNumber}</Text>
-          </View>
-        </View>
-      </View>
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        top: topPx,
+        right: rightPx,
+        transform: [
+          { translateX: slideAnim },
+          { rotate: `${tilt}deg` },
+        ],
+        opacity: opacityAnim,
+        zIndex: 10,
+      }}
+    >
+      <Animated.View style={{ transform: [{ rotate: spin }] }}>
+        <LinearGradient
+          colors={["#3A8FBF", "#30C8B8", "#22D4C4", "#4870B0"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.badgeCircle}
+        >
+          <Text style={styles.badgeText}>ISIC</Text>
+        </LinearGradient>
+      </Animated.View>
+    </Animated.View>
+  );
+}
 
-      <View style={styles.cardBody}>
+function ISICCard({ card }: { card: typeof cards[0] }) {
+  return (
+    <View style={[styles.card, { width: CARD_W, height: CARD_H }]}>
+      <Image
+        source={require("../assets/images/isic-card-bg.png")}
+        style={styles.cardBg}
+        resizeMode="cover"
+      />
+
+      <View style={styles.cardContent}>
+        <View style={styles.cardHeaderRow}>
+          <View style={styles.isicLogoArea}>
+            <LinearGradient
+              colors={["#3A8FBF", "#30C8B8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.isicCircle}
+            >
+              <Text style={styles.isicCircleText}>ISIC</Text>
+            </LinearGradient>
+            <View style={{ marginLeft: 8 }}>
+              <Text style={styles.isicIntl}>INTERNATIONAL</Text>
+              <Text style={styles.isicStudent}>STUDENT</Text>
+              <Text style={styles.isicIdentity}>IDENTITY CARD</Text>
+            </View>
+          </View>
+          <View style={styles.unescoArea}>
+            <Feather name="globe" size={16} color="#0D5C84" />
+            <View style={{ marginLeft: 4 }}>
+              <Text style={styles.cardNumLabel}>ISIC card number</Text>
+              <Text style={styles.cardNum}>{card.cardNumber}</Text>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.photoContainer}>
           <View style={styles.photoPlaceholder}>
-            <Feather name="user" size={52} color="#ffffff" />
+            <Feather name="user" size={46} color="rgba(255,255,255,0.65)" />
           </View>
         </View>
 
@@ -82,7 +196,7 @@ function ISICCard({ card }: { card: typeof cards[0] }) {
         <View style={styles.qrContainer}>
           <QRCode
             value={`ISIC-${card.cardNumber}`}
-            size={CARD_W * 0.4}
+            size={CARD_W * 0.37}
             color="#1C1B2E"
             backgroundColor="#ffffff"
           />
@@ -97,7 +211,6 @@ export default function CardDetailScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
   const [activeTab, setActiveTab] = useState<"front" | "back">("front");
-  const [activeCard, setActiveCard] = useState(0);
 
   const now = new Date();
   const dateStr = `${now.getDate()}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
@@ -118,27 +231,26 @@ export default function CardDetailScreen() {
         </Text>
       </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: bottomPad + 20 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.cardWrapper}>
-          <ISICCard card={cards[activeCard]} />
-        </View>
+      <View style={styles.screenBody}>
+        {BADGE_POSITIONS.map((b, i) => (
+          <ISICBadge
+            key={i}
+            topFrac={b.topFrac}
+            rightFrac={b.rightFrac}
+            tilt={b.tilt}
+            delay={b.delay}
+          />
+        ))}
 
-        <View style={styles.dotRow}>
-          {cards.map((_, i) => (
-            <View
-              key={i}
-              style={[styles.dot, activeCard === i ? styles.dotActive : {}]}
-            />
-          ))}
+        <View style={styles.cardArea}>
+          <View style={styles.cardWrapper}>
+            <ISICCard card={cards[0]} />
+          </View>
+          <View style={styles.dotRow}>
+            <View style={[styles.dot, styles.dotActive]} />
+          </View>
         </View>
-      </ScrollView>
+      </View>
 
       <View style={[styles.bottomActions, { paddingBottom: bottomPad + 10 }]}>
         <View style={styles.tabSwitcher}>
@@ -181,10 +293,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 14,
     gap: 12,
+    zIndex: 999,
   },
-  backBtn: {
-    padding: 4,
-  },
+  backBtn: { padding: 4 },
   validBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -208,64 +319,87 @@ const styles = StyleSheet.create({
     color: "#A0A0C0",
     marginLeft: "auto",
   },
-  scrollContent: {
+  screenBody: {
+    flex: 1,
+    position: "relative",
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+  },
+  cardArea: {
+    flex: 1,
     alignItems: "center",
-    paddingTop: 20,
+    justifyContent: "center",
+    zIndex: 50,
   },
   cardWrapper: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowColor: "#30B8B8",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 12,
     borderRadius: 16,
   },
   card: {
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: "#5ECECE",
+    position: "relative",
   },
-  cardHeader: {
-    backgroundColor: "#ffffff",
+  cardBg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    zIndex: 1,
+  },
+  cardContent: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 14,
+    zIndex: 800,
+  },
+  cardHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    width: "100%",
+    paddingTop: 12,
+    paddingBottom: 10,
+    paddingHorizontal: 2,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    marginBottom: 10,
   },
   isicLogoArea: {
     flexDirection: "row",
     alignItems: "center",
   },
   isicCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#30B8B8",
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
   },
   isicCircleText: {
     fontFamily: "Inter_700Bold",
-    fontSize: 12,
+    fontSize: 11,
     color: "#ffffff",
     letterSpacing: 0.5,
   },
   isicIntl: {
     fontFamily: "Inter_400Regular",
-    fontSize: 8,
+    fontSize: 7,
     color: "#1C3A6E",
     letterSpacing: 0.5,
   },
   isicStudent: {
     fontFamily: "Inter_700Bold",
-    fontSize: 14,
+    fontSize: 13,
     color: "#1C3A6E",
-    letterSpacing: 0.5,
   },
   isicIdentity: {
     fontFamily: "Inter_400Regular",
-    fontSize: 8,
+    fontSize: 7,
     color: "#1C3A6E",
     letterSpacing: 0.5,
   },
@@ -275,27 +409,21 @@ const styles = StyleSheet.create({
   },
   cardNumLabel: {
     fontFamily: "Inter_400Regular",
-    fontSize: 9,
+    fontSize: 8,
     color: "#6B6B8A",
   },
   cardNum: {
     fontFamily: "Inter_600SemiBold",
-    fontSize: 12,
+    fontSize: 11,
     color: "#1C1B2E",
   },
-  cardBody: {
-    flex: 1,
-    alignItems: "center",
-    paddingTop: 24,
-    paddingHorizontal: 20,
-    backgroundColor: "#5ECECE",
-  },
   photoContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
+    marginTop: 2,
   },
   photoPlaceholder: {
-    width: CARD_W * 0.38,
-    height: CARD_W * 0.38,
+    width: CARD_W * 0.34,
+    height: CARD_W * 0.37,
     borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.3)",
     alignItems: "center",
@@ -305,45 +433,46 @@ const styles = StyleSheet.create({
   },
   holderName: {
     fontFamily: "Inter_700Bold",
-    fontSize: 18,
+    fontSize: 17,
     color: "#1C1B2E",
-    marginBottom: 4,
+    marginBottom: 3,
+    textAlign: "center",
   },
   holderSchool: {
     fontFamily: "Inter_400Regular",
-    fontSize: 13,
+    fontSize: 12,
     color: "#1C3A6E",
-    marginBottom: 20,
+    marginBottom: 14,
+    textAlign: "center",
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 14,
+    paddingHorizontal: 4,
   },
-  infoBlock: {
-    alignItems: "flex-start",
-  },
+  infoBlock: { alignItems: "flex-start" },
   infoLabel: {
     fontFamily: "Inter_400Regular",
-    fontSize: 10,
+    fontSize: 9,
     color: "#1C3A6E",
     marginBottom: 2,
   },
   infoValue: {
     fontFamily: "Inter_700Bold",
-    fontSize: 14,
+    fontSize: 13,
     color: "#1C1B2E",
   },
   qrContainer: {
     backgroundColor: "#ffffff",
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 12,
+    padding: 12,
   },
   dotRow: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 20,
+    marginTop: 18,
     gap: 6,
   },
   dot: {
@@ -354,6 +483,7 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     backgroundColor: "#6C63FF",
+    width: 18,
   },
   bottomActions: {
     alignItems: "center",
@@ -361,6 +491,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#F2F3F7",
     backgroundColor: "#ffffff",
+    zIndex: 999,
   },
   tabSwitcher: {
     flexDirection: "row",
@@ -384,5 +515,19 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: "#E5E5EA",
     marginHorizontal: 2,
+  },
+  badgeCircle: {
+    width: BADGE_SIZE,
+    height: BADGE_SIZE,
+    borderRadius: BADGE_SIZE / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    opacity: 0.82,
+  },
+  badgeText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 17,
+    color: "#ffffff",
+    letterSpacing: 1,
   },
 });
