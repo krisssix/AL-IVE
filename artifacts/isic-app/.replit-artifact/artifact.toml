@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "ISIC Mobile App"
+version = "1.0.0"
+id = "artifacts/isic-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 26026
+
+[services.development]
+run = "pnpm --filter @workspace/isic-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/isic-app", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/isic-app", "run", "serve" ]
+
+[services.env]
+PORT = "26026"
+BASE_PATH = "/"

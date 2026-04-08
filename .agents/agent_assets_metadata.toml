@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "sWHOSzYpHcOT9GbEUJxM1"
+uri = "file://artifacts/isic-app/assets/images/icon.png"
+type = "image"
+title = "isic app icon"
