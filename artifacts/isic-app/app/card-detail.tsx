@@ -24,7 +24,7 @@ const cards = [
     id: "1",
     cardNumber: "S 420 300 690 098 J",
     holderName: "Kristina Nazarjanová",
-    school: "Škola",
+    school: "Mendelova univerzita",
     validFrom: "09/2025",
     validTo: "12/2026",
     born: "21. 03. 2002",
