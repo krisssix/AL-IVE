@@ -26,39 +26,63 @@ const cards = [
     id: "1",
     cardNumber: "S 420 300 690 098 J",
     holderName: "Kristina Nazarjanová",
-    school: "Mendelova univerzita",
-    validFrom: "09/2025",
+    school: "Mendelova univerzita v Brně",
+    validFrom: "01/2022",
     validTo: "12/2026",
-    born: "21. 03. 2002",
+    born: "16.01.2001",
     valid: true,
   },
 ];
 
-// Hologram security layer that wipes in from the top when the card is shown.
+// Hologram security layer: a quarter-height scanning band that sweeps the card
+// from top to bottom in an endless loop, revealing the overlay only inside the
+// band. The image stays fixed relative to the card; only the clip window moves.
+const SCAN_H = CARD_H / 4;
+
 function HologramOverlay() {
-  const reveal = useRef(new Animated.Value(0)).current;
+  const scan = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(reveal, {
-      toValue: 1,
-      duration: 2000,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scan, {
+          toValue: 1,
+          duration: 3200,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: false,
+        }),
+        Animated.timing(scan, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
   }, []);
 
-  const height = reveal.interpolate({
+  const clipY = scan.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, CARD_H],
+    outputRange: [-SCAN_H, CARD_H],
+  });
+  const imageY = scan.interpolate({
+    inputRange: [0, 1],
+    outputRange: [SCAN_H, -CARD_H],
   });
 
   return (
-    <Animated.View pointerEvents="none" style={[styles.hologramClip, { height }]}>
-      <Image
-        source={require("../assets/images/hologram-overlay.png")}
-        style={styles.hologramImage}
-        resizeMode="cover"
-      />
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.hologramClip, { transform: [{ translateY: clipY }] }]}
+    >
+      <Animated.View style={{ transform: [{ translateY: imageY }] }}>
+        <Image
+          source={require("../assets/images/hologram-overlay.png")}
+          style={styles.hologramImage}
+          resizeMode="cover"
+        />
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -85,7 +109,7 @@ function ISICCard({ card }: { card: typeof cards[0] }) {
 
       <View style={styles.validityBlock}>
         <Text style={styles.infoValue}>
-          {card.validFrom} – {card.validTo}
+          {card.validFrom} - {card.validTo}
         </Text>
       </View>
       <View style={styles.bornBlock}>
@@ -147,7 +171,6 @@ export default function CardDetailScreen() {
         <View style={styles.dotRow}>
           <View style={[styles.dot, styles.dotActive]} />
           <View style={styles.dot} />
-          <View style={styles.dot} />
         </View>
       </View>
 
@@ -160,7 +183,7 @@ export default function CardDetailScreen() {
             <MaterialCommunityIcons
               name="badge-account-outline"
               size={26}
-              color={activeTab === "front" ? "#ffffff" : "#8A8A9A"}
+              color={activeTab === "front" ? "#ffffff" : "#B9B3E8"}
             />
           </TouchableOpacity>
           <View style={styles.tabDivider} />
@@ -171,7 +194,7 @@ export default function CardDetailScreen() {
             <MaterialCommunityIcons
               name="card-account-details-outline"
               size={24}
-              color={activeTab === "back" ? "#ffffff" : "#8A8A9A"}
+              color={activeTab === "back" ? "#ffffff" : "#B9B3E8"}
             />
           </TouchableOpacity>
         </View>
@@ -183,11 +206,11 @@ export default function CardDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#3FC1BE",
+    backgroundColor: "#131029",
   },
   topBar: {
     marginHorizontal: 14,
-    backgroundColor: "#242044",
+    backgroundColor: "#31267C",
     borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
@@ -314,6 +337,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     width: CARD_W,
+    height: SCAN_H,
     overflow: "hidden",
   },
   hologramImage: {
@@ -328,13 +352,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "rgba(255,255,255,0.5)",
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: "#7C6BD9",
   },
   dotActive: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#3FC1BE",
   },
   pillWrapper: {
     position: "absolute",
@@ -345,14 +369,9 @@ const styles = StyleSheet.create({
   tabSwitcher: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#31267C",
     borderRadius: 44,
     padding: 8,
-    shadowColor: "#1C1B2E",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14,
-    shadowRadius: 18,
-    elevation: 10,
   },
   tabBtn: {
     width: 56,
@@ -362,12 +381,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabBtnActive: {
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#4B2FF5",
   },
   tabDivider: {
     width: 1,
     height: 28,
-    backgroundColor: "#E5E5EA",
+    backgroundColor: "rgba(255,255,255,0.3)",
     marginHorizontal: 6,
   },
 });
