@@ -32,6 +32,11 @@ const headTags = [
   '<link rel="apple-touch-icon" href="/AL-IVE/apple-touch-icon.png" />',
 ].join("\n    ");
 
+fs.copyFileSync(
+  path.resolve(__dirname, "..", "assets", "images", "icon-512.png"),
+  path.join(dist, "apple-touch-icon.png")
+);
+
 let html = fs.readFileSync(indexPath, "utf8");
 if (!html.includes("apple-mobile-web-app-capable")) {
   html = html.replace("</head>", `    ${headTags}\n  </head>`);
