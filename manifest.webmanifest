@@ -1,0 +1,17 @@
+{
+  "name": "ISIC",
+  "short_name": "ISIC",
+  "start_url": "/AL-IVE/",
+  "scope": "/AL-IVE/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#242044",
+  "icons": [
+    {
+      "src": "/AL-IVE/apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
