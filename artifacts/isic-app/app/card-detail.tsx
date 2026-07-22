@@ -150,7 +150,7 @@ export default function CardDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#3FC1BE",
   },
   topBar: {
     marginHorizontal: 14,
@@ -196,12 +196,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     position: "relative",
-    shadowColor: "#30B8B8",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 10,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#3FC1BE",
   },
   cardBg: {
     position: "absolute",
@@ -291,10 +286,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#4A4668",
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   dotActive: {
-    backgroundColor: "#2AB5B5",
+    backgroundColor: "#ffffff",
   },
   pillWrapper: {
     position: "absolute",
