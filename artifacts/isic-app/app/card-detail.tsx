@@ -69,6 +69,14 @@ function ISICCard({ card }: { card: typeof cards[0] }) {
           backgroundColor="#ffffff"
         />
       </View>
+
+      <View style={styles.logoBubble}>
+        <Image
+          source={require("../assets/images/mendelu-logo.png")}
+          style={styles.schoolLogo}
+          resizeMode="contain"
+        />
+      </View>
     </View>
   );
 }
@@ -219,6 +227,21 @@ const styles = StyleSheet.create({
     width: CARD_W * 0.33,
     height: CARD_H * 0.253,
     borderRadius: CARD_W * 0.025,
+  },
+  logoBubble: {
+    position: "absolute",
+    left: CARD_W * 0.715,
+    top: CARD_H * 0.175,
+    width: CARD_W * 0.23,
+    height: CARD_W * 0.23,
+    borderRadius: CARD_W * 0.115,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  schoolLogo: {
+    width: "70%",
+    height: "60%",
   },
   holderName: {
     position: "absolute",
