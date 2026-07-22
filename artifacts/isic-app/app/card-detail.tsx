@@ -29,7 +29,7 @@ const cards = [
     school: "Mendelova univerzita v Brně",
     validFrom: "01/2022",
     validTo: "12/2026",
-    born: "16.01.2001",
+    born: "16.01.2002",
     valid: true,
   },
 ];
@@ -44,36 +44,22 @@ const BAND_W = CARD_W * 1.6;
 const HOLO_SCALE = 1.25;
 const SWEEP = CARD_H / 2 + 0.36 * (BAND_W + SCAN_H);
 
-function HologramOverlay() {
-  const scan = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(scan, {
-          toValue: 1,
-          duration: 3200,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: false,
-        }),
-        Animated.timing(scan, {
-          toValue: 0,
-          duration: 0,
-          useNativeDriver: false,
-        }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, []);
-
+function ScanBand({
+  scan,
+  offset,
+  opacity,
+}: {
+  scan: Animated.Value;
+  offset: number;
+  opacity: number;
+}) {
   const clipY = scan.interpolate({
     inputRange: [0, 1],
-    outputRange: [SWEEP, -SWEEP],
+    outputRange: [SWEEP + offset, -SWEEP + offset],
   });
   const imageY = scan.interpolate({
     inputRange: [0, 1],
-    outputRange: [-SWEEP, SWEEP],
+    outputRange: [-SWEEP - offset, SWEEP - offset],
   });
 
   return (
@@ -92,11 +78,45 @@ function HologramOverlay() {
       >
         <Image
           source={require("../assets/images/hologram-overlay.png")}
-          style={styles.hologramImage}
+          style={[styles.hologramImage, { opacity }]}
           resizeMode="cover"
         />
       </Animated.View>
     </Animated.View>
+  );
+}
+
+function HologramOverlay() {
+  const scan = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scan, {
+          toValue: 1,
+          duration: 5000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+        Animated.timing(scan, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  // The faint leading/trailing bands feather the hard clip edges so the
+  // scanning stripe fades in and out instead of cutting sharply.
+  return (
+    <>
+      <ScanBand scan={scan} offset={-SCAN_H * 0.85} opacity={0.16} />
+      <ScanBand scan={scan} offset={0} opacity={0.5} />
+      <ScanBand scan={scan} offset={SCAN_H * 0.85} opacity={0.16} />
+    </>
   );
 }
 
@@ -363,7 +383,6 @@ const styles = StyleSheet.create({
   hologramImage: {
     width: CARD_W * HOLO_SCALE,
     height: CARD_H * HOLO_SCALE,
-    opacity: 0.55,
   },
   dotRow: {
     flexDirection: "row",
