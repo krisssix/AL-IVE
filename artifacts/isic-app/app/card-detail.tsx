@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
+  Easing,
   Image,
   Platform,
   StyleSheet,
@@ -31,6 +33,35 @@ const cards = [
     valid: true,
   },
 ];
+
+// Hologram security layer that wipes in from the top when the card is shown.
+function HologramOverlay() {
+  const reveal = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(reveal, {
+      toValue: 1,
+      duration: 2000,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, []);
+
+  const height = reveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, CARD_H],
+  });
+
+  return (
+    <Animated.View pointerEvents="none" style={[styles.hologramClip, { height }]}>
+      <Image
+        source={require("../assets/images/hologram-overlay.png")}
+        style={styles.hologramImage}
+        resizeMode="cover"
+      />
+    </Animated.View>
+  );
+}
 
 function ISICCard({ card }: { card: typeof cards[0] }) {
   return (
@@ -75,6 +106,8 @@ function ISICCard({ card }: { card: typeof cards[0] }) {
         style={styles.schoolLogo}
         resizeMode="contain"
       />
+
+      <HologramOverlay />
     </View>
   );
 }
@@ -275,6 +308,18 @@ const styles = StyleSheet.create({
     height: CARD_H * 0.242,
     alignItems: "center",
     justifyContent: "center",
+  },
+  hologramClip: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: CARD_W,
+    overflow: "hidden",
+  },
+  hologramImage: {
+    width: CARD_W,
+    height: CARD_H,
+    opacity: 0.55,
   },
   dotRow: {
     flexDirection: "row",
