@@ -69,11 +69,11 @@ function HologramOverlay() {
 
   const clipY = scan.interpolate({
     inputRange: [0, 1],
-    outputRange: [-SWEEP, SWEEP],
+    outputRange: [SWEEP, -SWEEP],
   });
   const imageY = scan.interpolate({
     inputRange: [0, 1],
-    outputRange: [SWEEP, -SWEEP],
+    outputRange: [-SWEEP, SWEEP],
   });
 
   return (
