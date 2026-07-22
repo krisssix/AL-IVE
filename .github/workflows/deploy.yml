@@ -32,7 +32,7 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --filter ./artifacts/isic-app...
+      - run: pnpm install --filter ./artifacts/isic-app... --no-frozen-lockfile
 
       - run: GH_PAGES=1 pnpm exec expo export --platform web --output-dir dist-gh
         working-directory: artifacts/isic-app
