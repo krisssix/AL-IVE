@@ -81,8 +81,8 @@ function ISICCard({ card }: { card: typeof cards[0] }) {
 
 export default function CardDetailScreen() {
   const insets = useSafeAreaInsets();
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
-  const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
+  const topPad = insets.top;
+  const bottomPad = Math.max(insets.bottom, 16);
   const [activeTab, setActiveTab] = useState<"front" | "back">("front");
   const [now, setNow] = useState(new Date());
 

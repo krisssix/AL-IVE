@@ -91,12 +91,12 @@ export default function HomeScreen() {
   const [activeOffer, setActiveOffer] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
 
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const topPad = insets.top;
 
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 16 }}
+      contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.header, { paddingTop: topPad + 12 }]}>

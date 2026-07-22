@@ -40,7 +40,11 @@ fs.copyFileSync(
 let html = fs.readFileSync(indexPath, "utf8");
 if (!html.includes("apple-mobile-web-app-capable")) {
   html = html.replace("</head>", `    ${headTags}\n  </head>`);
-  fs.writeFileSync(indexPath, html);
 }
+html = html.replace(
+  'content="width=device-width, initial-scale=1, shrink-to-fit=no"',
+  'content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"'
+);
+fs.writeFileSync(indexPath, html);
 
 console.log("Patched dist-gh for GitHub Pages PWA.");
