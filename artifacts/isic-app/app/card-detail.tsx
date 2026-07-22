@@ -34,10 +34,15 @@ const cards = [
   },
 ];
 
-// Hologram security layer: a quarter-height scanning band that sweeps the card
-// from top to bottom in an endless loop, revealing the overlay only inside the
-// band. The image stays fixed relative to the card; only the clip window moves.
+// Hologram security layer: a quarter-height scanning band tilted 45° that
+// sweeps the card top to bottom in an endless loop, revealing the overlay only
+// inside the band. The clip window and the image inside carry inverse
+// transforms, so the (slightly enlarged) image stays pinned to the card while
+// only the tilted window moves; the card's overflow keeps it inside the card.
 const SCAN_H = CARD_H / 4;
+const BAND_W = CARD_W * 1.6;
+const HOLO_SCALE = 1.25;
+const SWEEP = CARD_H / 2 + 0.36 * (BAND_W + SCAN_H);
 
 function HologramOverlay() {
   const scan = useRef(new Animated.Value(0)).current;
@@ -64,19 +69,27 @@ function HologramOverlay() {
 
   const clipY = scan.interpolate({
     inputRange: [0, 1],
-    outputRange: [-SCAN_H, CARD_H],
+    outputRange: [-SWEEP, SWEEP],
   });
   const imageY = scan.interpolate({
     inputRange: [0, 1],
-    outputRange: [SCAN_H, -CARD_H],
+    outputRange: [SWEEP, -SWEEP],
   });
 
   return (
     <Animated.View
       pointerEvents="none"
-      style={[styles.hologramClip, { transform: [{ translateY: clipY }] }]}
+      style={[
+        styles.hologramClip,
+        { transform: [{ translateY: clipY }, { rotate: "-45deg" }] },
+      ]}
     >
-      <Animated.View style={{ transform: [{ translateY: imageY }] }}>
+      <Animated.View
+        style={[
+          styles.hologramInner,
+          { transform: [{ rotate: "45deg" }, { translateY: imageY }] },
+        ]}
+      >
         <Image
           source={require("../assets/images/hologram-overlay.png")}
           style={styles.hologramImage}
@@ -334,15 +347,22 @@ const styles = StyleSheet.create({
   },
   hologramClip: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    width: CARD_W,
+    left: (CARD_W - BAND_W) / 2,
+    top: (CARD_H - SCAN_H) / 2,
+    width: BAND_W,
     height: SCAN_H,
     overflow: "hidden",
   },
+  hologramInner: {
+    position: "absolute",
+    left: (BAND_W - CARD_W * HOLO_SCALE) / 2,
+    top: (SCAN_H - CARD_H * HOLO_SCALE) / 2,
+    width: CARD_W * HOLO_SCALE,
+    height: CARD_H * HOLO_SCALE,
+  },
   hologramImage: {
-    width: CARD_W,
-    height: CARD_H,
+    width: CARD_W * HOLO_SCALE,
+    height: CARD_H * HOLO_SCALE,
     opacity: 0.55,
   },
   dotRow: {
